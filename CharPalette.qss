@@ -1,0 +1,39 @@
+QWidget {
+    background-color: #111111;
+    color: #ffffff;
+    font-family: Saira, 'Segoe UI', 'Arial', sans-serif;
+    font-size: 16px;
+}
+
+QTabWidget::pane {
+    border: 2px solid #9a8c98;
+    border-radius: 8px;
+    background: #4a4e69;
+}
+
+QTabBar::tab {
+    background: #9a8c98;
+    color: #22223b;
+    border-radius: 6px;
+    padding: 8px 20px;
+    margin: 2px;
+    font-weight: bold;
+}
+
+QTabBar::tab:selected {
+    background: #f2e9e4;
+    color: #22223b;
+    border: 2px solid #c9ada7;
+}
+
+QLabel {
+    background: transparent;
+    color: #ffffff;
+    font-size: 22px;
+    font-weight: 600;
+}
+
+QMainWindow {
+    background: #111111;
+}
+
