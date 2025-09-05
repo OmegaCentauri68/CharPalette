@@ -5,12 +5,6 @@ QWidget {
     font-size: 16px;
 }
 
-QTabWidget::pane {
-    border: 2px solid #9a8c98;
-    border-radius: 8px;
-    background: #4a4e69;
-}
-
 QTabBar::tab {
     background: #9a8c98;
     color: #22223b;
@@ -33,7 +27,25 @@ QLabel {
     font-weight: 600;
 }
 
+QPushButton#emojiButton {
+    background: #22223b;
+    color: #f2e9e4;
+    font-size: 28px;
+    padding: 0px;
+    margin: 0px;
+    font-weight: bold;
+    box-shadow: 0 2px 8px #0004;
+    border: none;
+}
+QPushButton#emojiButton:hover {
+    background: #4a4e69;
+    color: #f2e9e4;
+}
+QPushButton#emojiButton:pressed {
+    background: #9a8c98;
+    color: #22223b;
+}
+
 QMainWindow {
     background: #111111;
 }
-
