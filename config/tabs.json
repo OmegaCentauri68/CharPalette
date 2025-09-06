@@ -1,0 +1,25 @@
+{
+  "tabs": [
+    {
+      "name": "Emoji",
+      "file": "assets/emoji.txt",
+      "type": "emoji"
+    },
+    {
+      "name": "Math Symbols",
+      "file": "assets/math_symbols.txt",
+      "type": "symbol"
+    },
+    {
+      "name": "Punctuations",
+      "file": "assets/punctuations.txt",
+      "type": "symbol"
+    },
+    {
+      "name": "Custom Symbols",
+      "file": "assets/custom.txt",
+      "type": "symbol"
+    }
+  ]
+}
+

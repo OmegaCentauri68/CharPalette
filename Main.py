@@ -22,26 +22,51 @@ class MainWindow(QMainWindow):
         tabs.setTabPosition(QTabWidget.TabPosition.South)
         tabs.setDocumentMode(True)
 
-        # Create a widget for each tab
-        emoji_tab: QWidget = QWidget()
-        math_tab: QWidget = QWidget()
-        punctuation_tab: QWidget = QWidget()
-
-        # Add tabs to the tab widget
-        tabs.addTab(emoji_tab, 'Emoji')
-        tabs.addTab(math_tab, 'Math Symbols')
-        tabs.addTab(punctuation_tab, 'Punctuations')
-
-        # Load emoji from file using utility function
-        emoji_list: list[str] = FileUtils.load_emojis_from_file('assets/emoji.txt')
-
-        # Setup grid layout for each tab
-        self.setup_grid_for_tab(emoji_tab, 'Emoji Grid', emoji_list)
-        self.setup_grid_for_tab(math_tab, 'Math Symbols Grid')
-        self.setup_grid_for_tab(punctuation_tab, 'Punctuations Grid')
+        # Load configuration and create tabs dynamically
+        self.load_tabs_from_config(tabs)
 
         # Set the central widget of the Window.
         self.setCentralWidget(tabs)
+
+    def load_tabs_from_config(self, tabs: QTabWidget) -> None:
+        """Load tabs dynamically from configuration file."""
+        config: dict = FileUtils.load_config()
+
+        if not config or 'tabs' not in config:
+            # Fallback to default if config is missing
+            self.create_fallback_tabs(tabs)
+            return
+
+        for tab_config in config['tabs']:
+            tab_name: str = tab_config.get('name', 'Unknown')
+            file_path: str = tab_config.get('file', '')
+            symbol_type: str = tab_config.get('type', 'symbol')
+
+            # Create tab widget
+            tab_widget: QWidget = QWidget()
+            tabs.addTab(tab_widget, tab_name)
+
+            # Load symbols from file
+            symbols: list[str] = FileUtils.load_symbols_from_file(file_path, symbol_type)
+
+            # Setup grid layout for this tab
+            self.setup_grid_for_tab(tab_widget, f'{tab_name} symbols', symbols)
+
+    def create_fallback_tabs(self, tabs: QTabWidget) -> None:
+        """Create fallback tabs if config is not available."""
+        # Create fallback emoji tab
+        emoji_tab: QWidget = QWidget()
+        tabs.addTab(emoji_tab, 'Emoji')
+        emoji_list: list[str] = FileUtils.load_emojis_from_file('assets/emoji.txt')
+        self.setup_grid_for_tab(emoji_tab, 'Emoji Grid', emoji_list)
+
+        # Create empty placeholder tabs
+        math_tab: QWidget = QWidget()
+        punctuation_tab: QWidget = QWidget()
+        tabs.addTab(math_tab, 'Math Symbols')
+        tabs.addTab(punctuation_tab, 'Punctuations')
+        self.setup_grid_for_tab(math_tab, 'Math Symbols Grid')
+        self.setup_grid_for_tab(punctuation_tab, 'Punctuations Grid')
 
     def setup_tray_icon(self) -> None:
         """Setup system tray icon."""
@@ -104,8 +129,7 @@ class MainWindow(QMainWindow):
         else:
             event.accept()
 
-
-    def setup_grid_for_tab(self, tab_widget, placeholder_text, emoji_list=None) -> None:
+    def setup_grid_for_tab(self, tab_widget, placeholder_text, symbol_list=None) -> None:
         """Helper function to create a grid layout in a tab."""
         # Create scroll area for the tab
         scroll_area: QScrollArea = QScrollArea()
@@ -120,18 +144,18 @@ class MainWindow(QMainWindow):
         layout.setVerticalSpacing(4)
         layout.setContentsMargins(10, 10, 10, 10)
 
-        if emoji_list:
+        if symbol_list:
             cols: int = 10
-            for idx, emoji in enumerate(emoji_list):
+            for idx, symbol in enumerate(symbol_list):
                 row: int = idx // cols
                 col: int = idx % cols
-                btn: QPushButton = QPushButton(emoji)
+                btn: QPushButton = QPushButton(symbol)
                 btn.setObjectName('emojiButton')
                 btn.setFlat(True)
                 btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
                 btn.setCursor(Qt.CursorShape.PointingHandCursor)
                 btn.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-                btn.clicked.connect(lambda checked, e=emoji: ClipboardUtils.copy_to_clipboard(e))
+                btn.clicked.connect(lambda checked, s=symbol: ClipboardUtils.copy_to_clipboard(s))
                 layout.addWidget(btn, row, col)
         else:
             # Add a placeholder label to show something is there
