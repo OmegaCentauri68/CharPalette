@@ -1,9 +1,8 @@
 from PySide6.QtWidgets import QApplication, QWidget, QMainWindow, QTabWidget, QGridLayout, QLabel, QPushButton, QSizePolicy, QScrollArea, QSystemTrayIcon, QMenu
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QClipboard, QIcon, QAction
+from PySide6.QtGui import QIcon, QAction
 import sys
-import os
-import regex
+from utils import FileUtils, ClipboardUtils
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -33,8 +32,8 @@ class MainWindow(QMainWindow):
         tabs.addTab(math_tab, 'Math Symbols')
         tabs.addTab(punctuation_tab, 'Punctuations')
 
-        # Load emoji from file
-        emoji_list: list[str] = self.load_emojis_from_file('assets/emoji.txt')
+        # Load emoji from file using utility function
+        emoji_list: list[str] = FileUtils.load_emojis_from_file('assets/emoji.txt')
 
         # Setup grid layout for each tab
         self.setup_grid_for_tab(emoji_tab, 'Emoji Grid', emoji_list)
@@ -44,7 +43,7 @@ class MainWindow(QMainWindow):
         # Set the central widget of the Window.
         self.setCentralWidget(tabs)
 
-    def setup_tray_icon(self):
+    def setup_tray_icon(self) -> None:
         """Setup system tray icon."""
         if not QSystemTrayIcon.isSystemTrayAvailable():
             return
@@ -72,24 +71,24 @@ class MainWindow(QMainWindow):
         # Show tray icon
         self.tray_icon.show()
 
-    def tray_icon_activated(self, reason):
+    def tray_icon_activated(self, reason) -> None:
         """Handle tray icon activation."""
         if reason == QSystemTrayIcon.ActivationReason.DoubleClick:
             self.show_window()
 
-    def show_window(self):
+    def show_window(self) -> None:
         """Show and bring window to front."""
         self.show()
         self.raise_()
         self.activateWindow()
 
-    def quit_application(self):
+    def quit_application(self) -> None:
         """Quit the application completely."""
         if hasattr(self, 'tray_icon'):
             self.tray_icon.hide()
         QApplication.instance().quit()
 
-    def closeEvent(self, event):
+    def closeEvent(self, event) -> None:
         """Override close event to minimize to tray instead of quitting."""
         if hasattr(self, 'tray_icon') and self.tray_icon.isVisible():
             self.hide()
@@ -105,24 +104,17 @@ class MainWindow(QMainWindow):
         else:
             event.accept()
 
-    def load_emojis_from_file(self, filename: str) -> list[str]:
-        """Load emojis from a txt file."""
-        with open(filename, 'r', encoding='utf-8') as file:
-            content: str = file.read()
-            # Use regex to match emoji sequences and filter out whitespace
-            emojis: list[str] = [match.group() for match in regex.finditer(r'\X', content) if not match.group().isspace()]
-            return emojis
 
     def setup_grid_for_tab(self, tab_widget, placeholder_text, emoji_list=None) -> None:
         """Helper function to create a grid layout in a tab."""
         # Create scroll area for the tab
-        scroll_area = QScrollArea()
+        scroll_area: QScrollArea = QScrollArea()
         scroll_area.setWidgetResizable(True)
         scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
 
         # Create content widget for the scroll area
-        content_widget = QWidget()
+        content_widget: QWidget = QWidget()
         layout: QGridLayout = QGridLayout(content_widget)
         layout.setHorizontalSpacing(4)
         layout.setVerticalSpacing(4)
@@ -139,7 +131,7 @@ class MainWindow(QMainWindow):
                 btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
                 btn.setCursor(Qt.CursorShape.PointingHandCursor)
                 btn.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-                btn.clicked.connect(lambda checked, e=emoji: self.copy_to_clipboard(e))
+                btn.clicked.connect(lambda checked, e=emoji: ClipboardUtils.copy_to_clipboard(e))
                 layout.addWidget(btn, row, col)
         else:
             # Add a placeholder label to show something is there
@@ -151,13 +143,9 @@ class MainWindow(QMainWindow):
         scroll_area.setWidget(content_widget)
 
         # Add scroll area to tab widget
-        tab_layout = QGridLayout(tab_widget)
+        tab_layout: QGridLayout = QGridLayout(tab_widget)
         tab_layout.setContentsMargins(0, 0, 0, 0)
         tab_layout.addWidget(scroll_area, 0, 0)
-
-    def copy_to_clipboard(self, text) -> None:
-        clipboard = QApplication.instance().clipboard()
-        clipboard.setText(text)
 
 if __name__ == '__main__':
     app: QApplication = QApplication(sys.argv)

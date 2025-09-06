@@ -34,7 +34,6 @@ QPushButton#emojiButton {
     padding: 0px;
     margin: 0px;
     font-weight: bold;
-    box-shadow: 0 2px 8px #0004;
     border: none;
 }
 QPushButton#emojiButton:hover {
