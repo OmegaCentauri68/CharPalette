@@ -4,7 +4,7 @@ Utility functions for CharPalette application.
 
 from PySide6.QtWidgets import QApplication
 import regex
-import json
+import yaml
 import os
 
 
@@ -12,9 +12,9 @@ class FileUtils:
     """Utility class for file operations."""
 
     @staticmethod
-    def load_config(config_path: str = 'config/tabs.json') -> dict:
+    def load_config(config_path: str = 'config/tabs.yaml') -> dict:
         """
-        Load configuration from JSON file.
+        Load configuration from YAML file.
 
         Args:
             config_path: Path to the config file
@@ -24,10 +24,10 @@ class FileUtils:
         """
         try:
             with open(config_path, 'r', encoding='utf-8') as file:
-                return json.load(file)
-        except (FileNotFoundError, json.JSONDecodeError) as e:
-            print(f'Error loading config: {e}')
-            return {'tabs': []}
+                return yaml.safe_load(file)
+        except (FileNotFoundError, yaml.YAMLError) as e:
+            print(f"Error loading config: {e}")
+            return {"tabs": []}
 
     @staticmethod
     def load_symbols_from_file(filename: str, symbol_type: str = 'emoji') -> list[str]:

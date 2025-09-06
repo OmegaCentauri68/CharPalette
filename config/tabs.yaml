@@ -1,0 +1,27 @@
+# CharPalette Configuration File
+# Add your custom tabs here. Each tab needs:
+# - name: Display name for the tab
+# - file: Path to the text file containing symbols/emojis (one per line)
+# - type: Either 'emoji' or 'symbol'
+
+tabs:
+  - name: "Emoji"
+    file: "assets/emoji.txt"
+    type: "emoji"
+
+  - name: "Math Symbols"
+    file: "assets/math_symbols.txt"
+    type: "symbol"
+
+  - name: "Punctuations"
+    file: "assets/punctuations.txt"
+    type: "symbol"
+
+  - name: "Custom Symbols"
+    file: "assets/custom.txt"
+    type: "symbol"
+
+# Example of adding a new tab:
+# - name: "Currency"
+#   file: "assets/currency.txt"
+#   type: "symbol"
