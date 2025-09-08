@@ -31,9 +31,10 @@ QPushButton#emojiButton {
     background: #22223b;
     color: #f2e9e4;
     font-size: 28px;
+    font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'STIX Two Math', sans-serif;
     padding: 0px;
     margin: 0px;
-    font-weight: bold;
+    font-weight: normal;
     border: none;
 }
 QPushButton#emojiButton:hover {

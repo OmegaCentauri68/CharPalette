@@ -1,7 +1,8 @@
 from PySide6.QtWidgets import QApplication, QWidget, QMainWindow, QTabWidget, QGridLayout, QLabel, QPushButton, QSizePolicy, QScrollArea, QSystemTrayIcon, QMenu
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QIcon, QAction
+from PySide6.QtGui import QIcon, QAction, QFontDatabase
 import sys
+import os
 from utils import FileUtils, ClipboardUtils
 
 class MainWindow(QMainWindow):
@@ -171,9 +172,27 @@ class MainWindow(QMainWindow):
         tab_layout.setContentsMargins(0, 0, 0, 0)
         tab_layout.addWidget(scroll_area, 0, 0)
 
+def load_custom_fonts() -> None:
+    """Load custom fonts from assets/fonts directory."""
+    fonts_dir: str = os.path.join('assets', 'fonts')
+
+    if os.path.exists(fonts_dir):
+        for font_file in os.listdir(fonts_dir):
+            if font_file.endswith(('.ttf', '.otf')):
+                font_path: str = os.path.join(fonts_dir, font_file)
+                font_id: int = QFontDatabase.addApplicationFont(font_path)
+                if font_id != -1:
+                    font_families: list[str] = QFontDatabase.applicationFontFamilies(font_id)
+                    print(f'Successfully loaded font: {font_families}')
+                else:
+                    print(f'Failed to load font: {font_path}')
+
+
 if __name__ == '__main__':
     app: QApplication = QApplication(sys.argv)
     app.setApplicationName('CharPalette')
+    load_custom_fonts()
+
     with open('CharPalette.qss', 'r') as f:
         app.setStyleSheet(f.read())
     window: QMainWindow = MainWindow()

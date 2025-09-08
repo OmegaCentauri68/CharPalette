@@ -6,22 +6,18 @@
 
 tabs:
   - name: "Emoji"
-    file: "assets/emoji.txt"
+    file: "palettes/emoji.txt"
     type: "emoji"
 
   - name: "Math Symbols"
-    file: "assets/math_symbols.txt"
+    file: "palettes/math_symbols.txt"
     type: "symbol"
 
   - name: "Punctuations"
-    file: "assets/punctuations.txt"
-    type: "symbol"
-
-  - name: "Custom Symbols"
-    file: "assets/custom.txt"
+    file: "palettes/punctuations.txt"
     type: "symbol"
 
 # Example of adding a new tab:
 # - name: "Currency"
-#   file: "assets/currency.txt"
+#   file: "palettes/currency.txt"
 #   type: "symbol"
