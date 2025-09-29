@@ -6,6 +6,8 @@ from PySide6.QtGui import QFont
 from typing import TypedDict
 from grapheme import graphemes
 import yaml
+import os
+import sys
 
 T = TypeVar('T', bound=QWidget)
 L = TypeVar('L', bound=QLayout)
@@ -198,20 +200,28 @@ def change_font_weight(widget: T, font_weight: QFont.Weight) -> None:
     widget.setFont(font)
 
 def load_qss(app: QApplication, file_path: str) -> None:
-    with open(file_path, 'r') as file:
+    path = get_resource_path(file_path)
+    with open(path, 'r') as file:
         app.setStyleSheet(file.read())
 
 def get_yaml_data(file_path: str) -> list[TabConfig]:
-    with open(file_path, 'r', encoding='utf-8') as file:
-        data: List[TabConfig] = yaml.safe_load(file)
+    absolute_path = get_resource_path(file_path)
+    with open(absolute_path, 'r', encoding='utf-8') as file:
+        data: list[TabConfig] = yaml.safe_load(file)
     return data
 
 def get_tab_file_data(file_path: str) -> tuple[str, ...]:
-    with open(file_path, 'r', encoding='utf-8') as f:
+    path = get_resource_path(file_path)
+    with open(path, 'r', encoding='utf-8') as f:
         content: str = f.read()
         return tuple(g for g in graphemes(content) if not g.isspace())
 
-QLayout.add_widgets = add_widgets
+def get_resource_path(relative_path: str) -> str:
+    """Get absolute path to resource, works for dev and for PyInstaller"""
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
-if __name__ == '__main__':
-    print(get_tab_file_data('assets/tabs/emojis.txt'))
+QLayout.add_widgets = add_widgets
