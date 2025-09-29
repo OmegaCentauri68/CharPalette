@@ -1,0 +1,43 @@
+/* styles.qss */
+QWidget {
+    background-color: #404040;
+}
+
+QTabWidget {
+    border: none;
+}
+
+QTabBar::tab {
+    background-color: #404040;
+    color: #ffffff;
+    font-family: 'Saira';
+    font-size: 16px;
+    border-top: 2px solid #111111;
+    padding: 4px;
+}
+
+QTabBar::tab:selected {
+    background-color: #808080;
+    color: #111111;
+    font-weight: bold;
+}
+
+QPushButton {
+    font-size: 22px;
+}
+
+QPushButton#symbolButton {
+    border: none;
+    background-color: transparent;
+    padding: 6px;
+    color: #ffffff;
+}
+
+QPushButton#symbolButton:hover {
+    background-color: #707070;
+}
+
+QPushButton#symbolButton:pressed {
+    background-color: #dddddd;
+    color: #111111;
+}

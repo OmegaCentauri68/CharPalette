@@ -1,0 +1,8 @@
+- tab_name: 'Emoji'
+  font: 'Noto Color Emoji'
+  path: 'assets/tabs/emojis.txt'
+
+
+- tab_name: 'Math Symbols'
+  font: 'STIX Two Math'
+  path: 'assets/tabs/math_symbols.txt'
