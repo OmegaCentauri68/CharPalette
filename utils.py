@@ -2,6 +2,7 @@
 from typing import TypeVar, overload
 from PySide6.QtCore import QSize, Qt, QObject, QMargins, QPoint, QRect
 from PySide6.QtWidgets import QApplication, QLayout, QFrame, QWidget, QSizePolicy
+from PySide6.QtGui import QFont
 from typing import TypedDict
 from grapheme import graphemes
 import yaml
@@ -68,10 +69,16 @@ class FlowLayout(QLayout):
         return size
 
     def _do_layout(self, rect, test_only):
-        x = rect.x()
-        y = rect.y()
-        line_height = 0
+        if not self._item_list:
+            return 0
+
         spacing = self.spacing()
+
+        # First pass: calculate line breaks and line widths
+        lines = []
+        current_line = []
+        current_line_width = 0
+        line_height = 0
 
         for item in self._item_list:
             style = item.widget().style()
@@ -83,20 +90,72 @@ class FlowLayout(QLayout):
             )
             space_x = spacing + layout_spacing_x
             space_y = spacing + layout_spacing_y
-            next_x = x + item.sizeHint().width() + space_x
-            if next_x - space_x > rect.right() and line_height > 0:
-                x = rect.x()
-                y = y + line_height + space_y
-                next_x = x + item.sizeHint().width() + space_x
-                line_height = 0
 
-            if not test_only:
-                item.setGeometry(QRect(QPoint(x, y), item.sizeHint()))
+            item_width = item.sizeHint().width()
+            item_height = item.sizeHint().height()
 
-            x = next_x
-            line_height = max(line_height, item.sizeHint().height())
+            # Check if we need to wrap to next line
+            needed_width = current_line_width + (space_x if current_line else 0) + item_width
+            if needed_width > rect.width() and current_line:
+                # Save current line and start new one
+                lines.append({
+                    'items': current_line.copy(),
+                    'width': current_line_width,
+                    'height': line_height,
+                    'space_y': space_y
+                })
+                current_line = [item]
+                current_line_width = item_width
+                line_height = item_height
+            else:
+                # Add to current line
+                if current_line:
+                    current_line_width += space_x
+                current_line.append(item)
+                current_line_width += item_width
+                line_height = max(line_height, item_height)
 
-        return y + line_height - rect.y()
+        # Don't forget the last line
+        if current_line:
+            lines.append({
+                'items': current_line.copy(),
+                'width': current_line_width,
+                'height': line_height,
+                'space_y': spacing + (lines[0]['space_y'] if lines else 0)
+            })
+
+        # Second pass: position items with centering
+        if not test_only:
+            y = rect.y()
+            for line in lines:
+                # Calculate x offset to center the line
+                available_width = rect.width()
+                line_width = line['width']
+                x_offset = rect.x() + (available_width - line_width) // 2
+
+                x = x_offset
+                for i, item in enumerate(line['items']):
+                    item.setGeometry(QRect(QPoint(x, y), item.sizeHint()))
+
+                    # Add spacing for next item (except for last item)
+                    if i < len(line['items']) - 1:
+                        style = item.widget().style()
+                        layout_spacing_x = style.layoutSpacing(
+                            QSizePolicy.PushButton, QSizePolicy.PushButton, Qt.Horizontal
+                        )
+                        space_x = spacing + layout_spacing_x
+                        x += item.sizeHint().width() + space_x
+                    else:
+                        x += item.sizeHint().width()
+
+                y += line['height'] + line['space_y']
+
+        # Calculate total height
+        total_height = sum(line['height'] for line in lines)
+        if len(lines) > 1:
+            total_height += sum(line['space_y'] for line in lines[1:])
+
+        return total_height
 
 class TabConfig(TypedDict):
     tab_name: str
@@ -133,9 +192,10 @@ def add_widgets(self: QLayout, *widgets: QWidget) -> None:
     for widget in widgets:
         self.addWidget(widget)
 
-def set_objects_name(names: dict[QWidget, str]) -> None:
-    for widget, name in names.items():
-        widget.setObjectName(name)
+def change_font_weight(widget: T, font_weight: QFont.Weight) -> None:
+    font = widget.font()
+    font.setWeight(font_weight)
+    widget.setFont(font)
 
 def load_qss(app: QApplication, file_path: str) -> None:
     with open(file_path, 'r') as file:
