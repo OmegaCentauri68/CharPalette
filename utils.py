@@ -200,7 +200,7 @@ def change_font_weight(widget: T, font_weight: QFont.Weight) -> None:
     widget.setFont(font)
 
 def load_qss(app: QApplication, file_path: str) -> None:
-    path = get_resource_path(file_path)
+    path: str = get_resource_path(file_path)
     with open(path, 'r') as file:
         app.setStyleSheet(file.read())
 

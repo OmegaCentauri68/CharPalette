@@ -1,6 +1,6 @@
 # main.py
 from PySide6.QtCore import Qt, QSize, QMargins, QPoint, QRect
-from PySide6.QtWidgets import QApplication, QSizePolicy, QMainWindow, QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QLabel, QTextEdit, QFrame
+from PySide6.QtWidgets import QApplication, QSizePolicy, QMainWindow, QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QLabel, QTextEdit, QFrame, QSpacerItem, QScrollArea
 from PySide6.QtGui import QGuiApplication, QFont
 import sys
 from utils import *
@@ -13,13 +13,23 @@ class Header(QFrame):
     def __init__(self):
         super().__init__()
         self.setObjectName('header')
-        layout = create_layout(self, QHBoxLayout); layout.addStretch()
+        layout = create_layout(self, QHBoxLayout)
         layout.setSpacing(0); layout.setContentsMargins(0, 0, 0, 0)
-        edit_button = create_widget(QPushButton, text='Edit'); edit_button.setFixedWidth(50); edit_button.setFlat(True); edit_button.setObjectName('headerButton'); edit_button.setCursor(Qt.PointingHandCursor)
-        change_font_button = create_widget(QPushButton, text='Font'); change_font_button.setFixedWidth(50); change_font_button.setFlat(True); change_font_button.setObjectName('headerButton'); change_font_button.setCursor(Qt.PointingHandCursor)
+        self.setting_button = create_widget(QPushButton, text='Setting', object_name='headerButton')
+        self.edit_button = create_widget(QPushButton, text='Edit', object_name='headerButton')
+        self.change_font_button = create_widget(QPushButton, text='Font', object_name='headerButton')
 
-        layout.add_widgets(edit_button, change_font_button)
-        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.style_buttons((self.setting_button, self.edit_button, self.change_font_button))
+        layout.addWidget(self.setting_button)
+        layout.addStretch()
+        layout.add_widgets(self.edit_button, self.change_font_button)
+        layout.setAlignment(Qt.AlignTop)
+
+    def style_buttons(self, button_list: tuple) -> None:
+        for button in button_list:
+            button.setFixedWidth(50)
+            button.setFlat(True)
+            button.setCursor(Qt.PointingHandCursor)
 
 class Footer(QFrame):
     def __init__(self):
@@ -35,6 +45,8 @@ class Footer(QFrame):
     def on_button_toggled(checked: bool, button: QPushButton, name: str) -> None:
         global current_tab, tabs, tab_buttons
         if name == current_tab: return
+
+        # Toggle Tab Buttons
         for button in tab_buttons:
             if button.text() == name:
                 button.setEnabled(False)
@@ -44,10 +56,11 @@ class Footer(QFrame):
             button.setEnabled(True)
             change_font_weight(button, QFont.Normal)
 
+        # Switch Tabs
         for tab in tabs:
-            if tab.name == name:
+            if tab.widget().name == name:
                 tab.setMaximumWidth(QWIDGETSIZE_MAX)
-                current_tab = tab.name;
+                current_tab = tab.widget().name
             else:
                 tab.setMaximumWidth(0)
 
@@ -62,17 +75,17 @@ class Footer(QFrame):
             tab_buttons.append(button)
         self.layout.addStretch()
 
-
 class SymbolTab(QFrame):
     def __init__(self, file_path: str):
         super().__init__()
         self.setObjectName('symbolTab')
         self.layout = FlowLayout(self)
         self.layout.setSpacing(0)
-        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Ignored)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         self.add_symbol_buttons(get_tab_file_data(file_path))
 
         self.name: str = ''
+        self.font = QFont()
 
     def add_symbol_buttons(self, symbol_list: tuple[str, ...]) -> None:
         for symbol in symbol_list:
@@ -81,6 +94,9 @@ class SymbolTab(QFrame):
             button.setFixedWidth(button.sizeHint().height() + 12); button.setFlat(True); button.setCursor(Qt.PointingHandCursor)
             button.clicked.connect(lambda checked, s=symbol: QGuiApplication.clipboard().setText(s))
             self.layout.addWidget(button)
+
+    def heightForWidth(self, width: int) -> int:
+        return self.layout.heightForWidth(width)
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -115,12 +131,21 @@ class MainWindow(QMainWindow):
         for tab_dict in YAML_DATA:
             symbol_tab = SymbolTab(tab_dict['path'])
             symbol_tab.name = tab_dict['tab_name']
-            self.tabs_container_layout.addWidget(symbol_tab)
-            tabs.append(symbol_tab)
-            symbol_tab.setMaximumWidth(0)
+
+            scroll_area = QScrollArea()
+            scroll_area.setWidget(symbol_tab)
+            scroll_area.setWidgetResizable(True)
+            scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+            scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+            scroll_area.setObjectName('symbolTabScrollArea')
+
+            scroll_area.name = tab_dict['tab_name']
+            self.tabs_container_layout.addWidget(scroll_area)
+            tabs.append(scroll_area)
+            scroll_area.setMaximumWidth(0)
         current_tab = YAML_DATA[0]['tab_name']
         for tab in tabs:
-            if tab.name == current_tab:
+            if tab.widget().name == current_tab:
                 tab.setMaximumWidth(QWIDGETSIZE_MAX)
                 break
 
@@ -135,13 +160,13 @@ class MainWindow(QMainWindow):
                 break
 
 current_tab: str = ''
-tabs: list[SymbolTab] = []
+tabs: list[QScrollArea] = []
 tab_buttons: list[QPushButton] = []
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     app.setStyle('Fusion')
-    load_qss(app, 'assets/styles.qss')
+    load_qss(app, 'styles.qss')
     window = MainWindow()
     window.resize(400, 600)
     window.show()
