@@ -59,6 +59,14 @@ QPushButton#tabButton:checked {
     color: #111111;
 }
 
+QPushButton#closeButton {
+    background-color: #353535;
+    border-radius: 8px;
+}
+QPushButton#closeButton:hover {
+    background-color: #ff0000;
+}
+
 QFrame#header {
     background-color: #303030;
 }

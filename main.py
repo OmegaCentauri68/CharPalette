@@ -6,7 +6,7 @@ import sys
 from utils import *
 
 QWIDGETSIZE_MAX: int = 16777215
-YAML_PATH: str = 'assets/config/tabs.yaml'
+YAML_PATH: str = 'resources/config/tabs.yaml'
 YAML_DATA: list[TabConfig]
 
 class Header(QFrame):
@@ -30,6 +30,22 @@ class Header(QFrame):
             button.setFixedWidth(50)
             button.setFlat(True)
             button.setCursor(Qt.PointingHandCursor)
+
+class SettingsMenu(QFrame):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setObjectName('settingsMenu')
+        layout = create_layout(self, QVBoxLayout)
+        layout.setSpacing(10); layout.setContentsMargins(10, 10, 10, 10)
+
+        self.close_button = create_widget(QPushButton, text='✕', object_name='closeButton')
+        self.close_button.setFixedSize(40, 40); self.close_button.setFlat(True); self.close_button.setCursor(Qt.PointingHandCursor)
+        self.close_button.clicked.connect(self.hide)
+
+        layout.addWidget(self.close_button)
+        layout.addStretch()
+
+        self.hide()
 
 class Footer(QFrame):
     def __init__(self):
@@ -113,6 +129,7 @@ class MainWindow(QMainWindow):
 
         # Add Header
         header = Header()
+        header.setting_button.clicked.connect(self.show_settings_menu)
 
         # Add Tab Container
         self.tabs_container, self.tabs_container_layout = create_widget(QWidget, layout_class=QHBoxLayout, object_name='tabsContainer')
@@ -123,8 +140,25 @@ class MainWindow(QMainWindow):
         # Add Footer
         footer = Footer()
 
+        # Add Settings Menu (overlay)
+        self.settings_menu = SettingsMenu(central_widget)
+        self.settings_menu.setGeometry(central_widget.rect())
+        self.settings_menu.raise_()
+
         self.clean_up()
         central_layout.add_widgets(header, self.tabs_container, footer)
+
+    def show_settings_menu(self):
+        """Hiện settings menu và resize nó để chiếm toàn bộ central widget"""
+        self.settings_menu.setGeometry(self.centralWidget().rect())
+        self.settings_menu.show()
+        self.settings_menu.raise_()
+
+    def resizeEvent(self, event):
+        """Đảm bảo settings menu luôn chiếm toàn bộ kích thước window khi resize"""
+        super().resizeEvent(event)
+        if hasattr(self, 'settings_menu'):
+            self.settings_menu.setGeometry(self.centralWidget().rect())
 
     def add_tabs(self) -> None:
         global current_tab, tabs
