@@ -200,7 +200,7 @@ def change_font_weight(widget: T, font_weight: QFont.Weight) -> None:
     widget.setFont(font)
 
 def load_qss(app: QApplication, file_path: str) -> None:
-    path: str = get_resource_path(file_path)
+    path: str = get_app_resource_path(file_path)
     with open(path, 'r') as file:
         app.setStyleSheet(file.read())
 
@@ -216,8 +216,18 @@ def get_tab_file_data(file_path: str) -> tuple[str, ...]:
         content: str = f.read()
         return tuple(g for g in graphemes(content) if not g.isspace())
 
+RESOURCE_BASE = os.path.abspath(".")
+
+def set_resource_base(path: str):
+    global RESOURCE_BASE
+    RESOURCE_BASE = path
+
 def get_resource_path(relative_path: str) -> str:
-    """Get absolute path to resource, works for dev and for PyInstaller"""
+    """Get absolute path to user resource folder (customizable)"""
+    return os.path.join(RESOURCE_BASE, relative_path)
+
+def get_app_resource_path(relative_path: str) -> str:
+    """Get path to app resource (assets, etc.), works for dev and PyInstaller"""
     try:
         base_path = sys._MEIPASS
     except Exception:

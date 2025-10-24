@@ -1,6 +1,6 @@
 # main.py
 from PySide6.QtCore import Qt, QSize, QMargins, QPoint, QRect
-from PySide6.QtWidgets import QApplication, QSizePolicy, QMainWindow, QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QLabel, QTextEdit, QFrame, QSpacerItem, QScrollArea
+from PySide6.QtWidgets import QApplication, QSizePolicy, QMainWindow, QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QLabel, QTextEdit, QFrame, QSpacerItem, QScrollArea, QFileDialog, QLineEdit
 from PySide6.QtGui import QGuiApplication, QFont
 import sys
 from utils import *
@@ -42,10 +42,25 @@ class SettingsMenu(QFrame):
         self.close_button.setFixedSize(40, 40); self.close_button.setFlat(True); self.close_button.setCursor(Qt.PointingHandCursor)
         self.close_button.clicked.connect(self.hide)
 
-        layout.addWidget(self.close_button)
+        self.path_label = create_widget(QLabel, text='Resource Path:')
+        self.path_edit = create_widget(QLineEdit)
+        self.path_edit.setText(get_resource_path(''))
+        self.browse_button = create_widget(QPushButton, text='Browse')
+        self.browse_button.clicked.connect(self.browse_path)
+
+        layout.add_widgets(self.close_button, self.path_label, self.path_edit, self.browse_button)
         layout.addStretch()
 
         self.hide()
+
+    def browse_path(self):
+        path = QFileDialog.getExistingDirectory(self, "Select Resource Folder")
+        if path:
+            set_resource_base(path)
+            self.path_edit.setText(path)
+            # Reload tabs
+            main_window = self.parentWidget().parentWidget()  # central_widget -> MainWindow
+            main_window.reload_tabs()
 
 class Footer(QFrame):
     def __init__(self):
@@ -139,6 +154,7 @@ class MainWindow(QMainWindow):
 
         # Add Footer
         footer = Footer()
+        self.footer = footer
 
         # Add Settings Menu (overlay)
         self.settings_menu = SettingsMenu(central_widget)
@@ -159,6 +175,29 @@ class MainWindow(QMainWindow):
         super().resizeEvent(event)
         if hasattr(self, 'settings_menu'):
             self.settings_menu.setGeometry(self.centralWidget().rect())
+
+    def reload_tabs(self):
+        global YAML_DATA, tabs, tab_buttons, current_tab
+        # Clear tabs
+        for tab in tabs:
+            self.tabs_container_layout.removeWidget(tab)
+            tab.deleteLater()
+        tabs = []
+        # Clear footer buttons
+        for button in tab_buttons:
+            self.footer.layout.removeWidget(button)
+            button.deleteLater()
+        tab_buttons = []
+        # Remove stretch
+        self.footer.layout.takeAt(self.footer.layout.count() - 1)
+        # Reload YAML_DATA
+        YAML_DATA = get_yaml_data(YAML_PATH)
+        # Add tabs
+        self.add_tabs()
+        # Add footer buttons
+        self.footer.add_tab_buttons()
+        # Clean up
+        self.clean_up()
 
     def add_tabs(self) -> None:
         global current_tab, tabs
@@ -200,7 +239,7 @@ tab_buttons: list[QPushButton] = []
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     app.setStyle('Fusion')
-    load_qss(app, 'styles.qss')
+    load_qss(app, 'assets/styles.qss')
     window = MainWindow()
     window.resize(400, 600)
     window.show()
