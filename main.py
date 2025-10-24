@@ -198,7 +198,7 @@ class MainWindow(QMainWindow):
 
     def add_tabs(self) -> None:
         global current_tab, tabs
-        if not YAML_DATA:  # Nếu YAML_DATA rỗng (lỗi load), không làm gì cả
+        if not YAML_DATA:
             return
 
         for tab_dict in YAML_DATA:
@@ -243,7 +243,7 @@ tab_buttons: list[QPushButton] = []
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     app.setStyle('Fusion')
-    load_settings()  # Load saved resource path
+    load_settings()
     load_qss(app, 'assets/styles.qss')
     window = MainWindow()
     window.resize(400, 600)
