@@ -165,13 +165,11 @@ class MainWindow(QMainWindow):
         central_layout.add_widgets(header, self.tabs_container, footer)
 
     def show_settings_menu(self):
-        """Hiện settings menu và resize nó để chiếm toàn bộ central widget"""
         self.settings_menu.setGeometry(self.centralWidget().rect())
         self.settings_menu.show()
         self.settings_menu.raise_()
 
     def resizeEvent(self, event):
-        """Đảm bảo settings menu luôn chiếm toàn bộ kích thước window khi resize"""
         super().resizeEvent(event)
         if hasattr(self, 'settings_menu'):
             self.settings_menu.setGeometry(self.centralWidget().rect())
@@ -196,11 +194,13 @@ class MainWindow(QMainWindow):
         self.add_tabs()
         # Add footer buttons
         self.footer.add_tab_buttons()
-        # Clean up
         self.clean_up()
 
     def add_tabs(self) -> None:
         global current_tab, tabs
+        if not YAML_DATA:  # Nếu YAML_DATA rỗng (lỗi load), không làm gì cả
+            return
+
         for tab_dict in YAML_DATA:
             symbol_tab = SymbolTab(tab_dict['path'])
             symbol_tab.name = tab_dict['tab_name']
@@ -216,15 +216,19 @@ class MainWindow(QMainWindow):
             self.tabs_container_layout.addWidget(scroll_area)
             tabs.append(scroll_area)
             scroll_area.setMaximumWidth(0)
-        current_tab = YAML_DATA[0]['tab_name']
-        for tab in tabs:
-            if tab.widget().name == current_tab:
-                tab.setMaximumWidth(QWIDGETSIZE_MAX)
-                break
+
+        if YAML_DATA:  # Chỉ set current_tab nếu có data
+            current_tab = YAML_DATA[0]['tab_name']
+            for tab in tabs:
+                if tab.widget().name == current_tab:
+                    tab.setMaximumWidth(QWIDGETSIZE_MAX)
+                    break
 
     @staticmethod
     def clean_up():
         global current_tab, tab_buttons
+        if not tab_buttons:  # Nếu không có button nào, không làm gì
+            return
         for button in tab_buttons:
             if button.text() == current_tab:
                 button.setChecked(True)
@@ -239,6 +243,7 @@ tab_buttons: list[QPushButton] = []
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     app.setStyle('Fusion')
+    load_settings()  # Load saved resource path
     load_qss(app, 'assets/styles.qss')
     window = MainWindow()
     window.resize(400, 600)

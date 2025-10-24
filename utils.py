@@ -8,6 +8,7 @@ from grapheme import graphemes
 import yaml
 import os
 import sys
+import json
 
 T = TypeVar('T', bound=QWidget)
 L = TypeVar('L', bound=QLayout)
@@ -205,22 +206,56 @@ def load_qss(app: QApplication, file_path: str) -> None:
         app.setStyleSheet(file.read())
 
 def get_yaml_data(file_path: str) -> list[TabConfig]:
-    absolute_path = get_resource_path(file_path)
-    with open(absolute_path, 'r', encoding='utf-8') as file:
-        data: list[TabConfig] = yaml.safe_load(file)
-    return data
+    try:
+        absolute_path = get_resource_path(file_path)
+        with open(absolute_path, 'r', encoding='utf-8') as file:
+            data: list[TabConfig] = yaml.safe_load(file)
+        return data
+    except (FileNotFoundError, yaml.YAMLError) as e:
+        print(f"Failed to load YAML from {file_path}: {e}")
+        return []
 
 def get_tab_file_data(file_path: str) -> tuple[str, ...]:
-    path = get_resource_path(file_path)
-    with open(path, 'r', encoding='utf-8') as f:
-        content: str = f.read()
-        return tuple(g for g in graphemes(content) if not g.isspace())
+    try:
+        path = get_resource_path(file_path)
+        with open(path, 'r', encoding='utf-8') as f:
+            content: str = f.read()
+            return tuple(g for g in graphemes(content) if not g.isspace())
+    except (FileNotFoundError, UnicodeDecodeError) as e:
+        print(f"Failed to load tab file from {file_path}: {e}")
+        return tuple()
 
 RESOURCE_BASE = os.path.abspath(".")
+
+def load_settings():
+    """Load settings from JSON file"""
+    global RESOURCE_BASE
+    settings_path = get_app_resource_path('assets/settings.json')
+    try:
+        with open(settings_path, 'r', encoding='utf-8') as f:
+            settings = json.load(f)
+            saved_path = settings.get('resource_path', '')
+            if saved_path and os.path.exists(saved_path):
+                RESOURCE_BASE = saved_path
+            else:
+                RESOURCE_BASE = os.path.abspath(".")
+    except (FileNotFoundError, json.JSONDecodeError):
+        RESOURCE_BASE = os.path.abspath(".")
+
+def save_settings():
+    """Save settings to JSON file"""
+    settings_path = get_app_resource_path('assets/settings.json')
+    settings = {'resource_path': RESOURCE_BASE}
+    try:
+        with open(settings_path, 'w', encoding='utf-8') as f:
+            json.dump(settings, f, indent=2)
+    except Exception as e:
+        print(f"Failed to save settings: {e}")
 
 def set_resource_base(path: str):
     global RESOURCE_BASE
     RESOURCE_BASE = path
+    save_settings()
 
 def get_resource_path(relative_path: str) -> str:
     """Get absolute path to user resource folder (customizable)"""
